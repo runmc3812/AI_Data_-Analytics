@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9주차 딥러닝 실습 노트북</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f5f5f0;
+    --nb-bg: #ffffff;
+    --border: #e2e2dc;
+    --border-strong: #c8c8c0;
+    --text: #1a1a18;
+    --text-muted: #6b6b66;
+    --purple: #7C3AED;
+    --purple-l: #EDE9FE;
+    --purple-ll: #F5F3FF;
+    --mint: #059669;
+    --mint-l: #D1FAE5;
+    --pink: #DB2777;
+    --pink-l: #FDF2F8;
+    --blue: #2563EB;
+    --blue-l: #DBEAFE;
+    --yellow: #D97706;
+    --yellow-l: #FFFBEB;
+    --orange: #DC2626;
+    --cell-num: #9ca3af;
+    --run-green: #16a34a;
+    --code-bg: #1e1b4b;
+    --code-text: #e2e8f0;
+    --code-comment: #94a3b8;
+    --code-keyword: #c084fc;
+    --code-string: #86efac;
+    --code-number: #fde68a;
+    --code-func: #7dd3fc;
+    --output-bg: #f9fafb;
+    --tag-bg: #f0fdf4;
+    --tag-text: #166534;
+    --radius: 10px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ─── Header ─── */
+  .nb-header {
+    background: var(--code-bg);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 2px solid var(--purple);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nb-logo {
+    width: 32px; height: 32px;
+    background: var(--purple);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .nb-title {
+    color: #e2e8f0;
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .nb-subtitle {
+    color: #94a3b8;
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  .nb-badges {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .nb-badge {
+    background: rgba(255,255,255,0.1);
+    color: #c4b5fd;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(196,181,253,0.3);
+  }
+  .nb-badge.kernel-on {
+    background: rgba(5,150,105,0.2);
+    color: #6ee7b7;
+    border-color: rgba(110,231,183,0.3);
+  }
+  .kernel-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: #6ee7b7;
+    border-radius: 50%;
+    margin-right: 5px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100%{opacity:1} 50%{opacity:0.4}
+  }
+
+  /* ─── Toolbar ─── */
+  .nb-toolbar {
+    background: var(--nb-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 32px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .tb-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s;
+  }
+  .tb-btn:hover { background: var(--bg); color: var(--text); }
+  .tb-btn.run-all {
+    background: var(--purple);
+    border-color: var(--purple);
+    color: white;
+    font-weight: 500;
+  }
+  .tb-btn.run-all:hover { background: #6d28d9; }
+  .tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  .progress-wrap {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .progress-label { font-size: 12px; color: var(--text-muted); }
+  .progress-bar-bg {
+    width: 120px; height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--purple);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  /* ─── Notebook body ─── */
+  .nb-body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 24px 80px;
+  }
+
+  /* ─── Section header ─── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 32px 0 12px;
+    padding: 14px 20px;
+    border-radius: var(--radius);
+    border-left: 4px solid var(--purple);
+    background: var(--purple-ll);
+  }
+  .section-icon { font-size: 20px; }
+  .section-text h3 { font-size: 15px; font-weight: 700; color: var(--purple); }
+  .section-text p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+  .section-step {
+    margin-left: auto;
+    background: var(--purple);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* ─── Cell ─── */
+  .cell {
+    display: flex;
+    gap: 0;
+    margin-bottom: 6px;
+    position: relative;
+  }
+  .cell:hover .cell-run-btn { opacity: 1; }
+  .cell-gutter {
+    width: 48px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 10px;
+    gap: 4px;
+  }
+  .cell-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--cell-num);
+    user-select: none;
+  }
+  .cell-run-btn {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--purple);
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+  }
+  .cell-run-btn svg { width: 10px; height: 10px; fill: white; margin-left: 1px; }
+  .cell-run-btn.running { opacity: 1; background: var(--orange); animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .cell-run-btn.done { opacity: 1; background: var(--run-green); animation: none; }
+
+  .cell-content { flex: 1; min-width: 0; }
+
+  /* ─── Markdown cell ─── */
+  .md-cell {
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    background: var(--nb-bg);
+    border: 1px solid var(--border);
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .md-cell h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--purple);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .md-cell p { margin-bottom: 6px; }
+  .md-cell p:last-child { margin-bottom: 0; }
+  .md-cell .highlight {
+    display: inline-block;
+    background: var(--purple-l);
+    color: var(--purple);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .md-cell .warn-box {
+    background: var(--yellow-l);
+    border-left: 3px solid var(--yellow);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--yellow);
+  }
+  .md-cell .info-box {
+    background: var(--blue-l);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--blue);
+  }
+  .md-cell .star-box {
+    background: linear-gradient(135deg, var(--purple-ll), var(--mint-l));
+    border: 1px solid var(--purple);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--purple);
+  }
+
+  /* ─── Code cell ─── */
+  .code-cell {
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .code-cell.active { border-color: var(--purple); }
+  .code-cell-header {
+    background: #161330;
+    padding: 6px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .lang-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #a78bfa;
+    background: rgba(167,139,250,0.15);
+    padding: 2px 8px;
+    border-radius: 3px;
+    border: 1px solid rgba(167,139,250,0.3);
+    letter-spacing: 0.05em;
+  }
+  .code-cell-header .cell-tag {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-left: auto;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 16px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    color: var(--code-text);
+    tab-size: 4;
+  }
+  .kw { color: var(--code-keyword); }
+  .fn { color: var(--code-func); }
+  .st { color: var(--code-string); }
+  .nm { color: var(--code-number); }
+  .cm { color: var(--code-comment); font-style: italic; }
+  .op { color: #f9a8d4; }
+
+  /* ─── Output cell ─── */
+  .output-cell {
+    background: var(--output-bg);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    padding: 14px 18px;
+  }
+  .output-hidden { display: none; }
+  .output-label {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--cell-num);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+  .output-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.8;
+    white-space: pre-wrap;
+  }
+  .output-text .epoch-line { color: var(--text-muted); }
+  .output-text .epoch-good { color: var(--mint); font-weight: 500; }
+  .output-df {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .output-df th {
+    background: var(--border);
+    padding: 5px 10px;
+    text-align: right;
+    font-weight: 500;
+    color: var(--text-muted);
+    border: 1px solid var(--border-strong);
+    font-size: 11px;
+  }
+  .output-df td {
+    padding: 4px 10px;
+    text-align: right;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .output-df tr:nth-child(even) td { background: white; }
+
+  /* ─── Interactive controls ─── */
+  .interactive-panel {
+    background: var(--nb-bg);
+    border: 1.5px solid var(--purple);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 6px 0;
+  }
+  .panel-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--purple);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .ctrl-label {
+    font-size: 13px;
+    color: var(--text);
+    min-width: 120px;
+    font-weight: 500;
+  }
+  .ctrl-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    min-width: 120px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    outline: none;
+  }
+  .ctrl-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--purple);
+    cursor: pointer;
+  }
+  .ctrl-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--purple);
+    min-width: 60px;
+    text-align: right;
+  }
+  .run-btn {
+    background: var(--purple);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 4px;
+    transition: background 0.15s;
+  }
+  .run-btn:hover { background: #6d28d9; }
+  .run-btn:disabled { background: #c4b5fd; cursor: not-allowed; }
+
+  /* ─── Chart canvas ─── */
+  .chart-wrap {
+    position: relative;
+    margin-top: 12px;
+  }
+  canvas {
+    width: 100% !important;
+    max-height: 260px;
+  }
+  .chart-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 4px;
+  }
+
+  /* ─── Results grid ─── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .result-card {
+    background: var(--output-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .result-card .rc-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+  .result-card .rc-val { font-size: 22px; font-weight: 700; color: var(--purple); font-family: 'JetBrains Mono', monospace; }
+  .result-card .rc-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ─── Learning rate experiment ─── */
+  .lr-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .lr-card {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .lr-card-header {
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .lr-card-body { padding: 8px 12px; font-size: 12px; color: var(--text-muted); min-height: 60px; }
+  .status-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+
+  /* ─── Normalize preview ─── */
+  .norm-grid {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr;
+    gap: 8px;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .norm-col-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding: 4px 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .norm-arrow { text-align: center; font-size: 16px; color: var(--purple); }
+  .norm-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .norm-row.before { background: #fff3cd; color: #856404; }
+  .norm-row.after { background: var(--mint-l); color: var(--mint); }
+  .norm-label { color: var(--text-muted); font-size: 11px; }
+
+  /* ─── Model structure viz ─── */
+  .model-viz {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 16px;
+    background: var(--code-bg);
+    border-radius: var(--radius);
+  }
+  .layer-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+  .layer-nodes {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+  }
+  .node {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid;
+  }
+  .node.input { background: rgba(37,99,235,0.3); border-color: #60a5fa; }
+  .node.hidden { background: rgba(124,58,237,0.3); border-color: #a78bfa; }
+  .node.output { background: rgba(5,150,105,0.3); border-color: #34d399; }
+  .node.more { background: transparent; border-color: transparent; font-size: 10px; color: #94a3b8; width: auto; height: auto; }
+  .layer-label { font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; text-align: center; }
+  .layer-name { font-size: 11px; color: #e2e8f0; font-weight: 500; text-align: center; }
+  .layer-arrow { color: #4b5563; font-size: 18px; }
+
+  /* ─── Floating run status ─── */
+  .run-status {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--code-bg);
+    border: 1px solid var(--purple);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 13px;
+    color: #c4b5fd;
+    display: none;
+    z-index: 200;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .run-status.show { display: block; }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 600px) {
+    .nb-body { padding: 12px 8px 60px; }
+    .results-grid, .lr-grid { grid-template-columns: 1fr; }
+    pre { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="nb-header">
+  <div class="nb-logo">🧠</div>
+  <div>
+    <div class="nb-title">9주차 딥러닝 실습 노트북</div>
+    <div class="nb-subtitle">당뇨 예측 데이터로 신경망 직접 만들기</div>
+  </div>
+  <div class="nb-badges">
+    <span class="nb-badge kernel-on"><span class="kernel-dot"></span>Python 3 (시뮬레이션)</span>
+    <span class="nb-badge">TensorFlow / Keras</span>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div class="nb-toolbar">
+  <button class="tb-btn run-all" onclick="runAll()">▶ 전체 실행</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="resetAll()">↺ 초기화</button>
+  <div class="progress-wrap">
+    <span class="progress-label" id="progress-label">0 / 6 완료</span>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-bar"></div></div>
+  </div>
+</div>
+
+<!-- Notebook body -->
+<div class="nb-body">
+
+  <!-- ─── STEP 1 ─── -->
+  <div class="section-header">
+    <span class="section-icon">📂</span>
+    <div class="section-text">
+      <h3>STEP 1 — 데이터 불러오기 + 정규화</h3>
+      <p>정규화 전후 숫자 범위를 비교해서 왜 필요한지 체감합니다</p>
+    </div>
+    <span class="section-step">STEP 1</span>
+  </div>
+
+  <div class="cell">
+    <div class="cell-gutter">
+      <span class="cell-num">[1]</span>
+      <button class="cell-run-btn" id="run-1" onclick="runCell(1)" title="셀 실행">
+        <svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>
+      </button>
+    </div>
+    <div class="cell-content">
+      <div class="md-cell" style="margin-bottom:6px;">
+        <h4>📊 당뇨 예측 데이터셋 (Pima Indians Diabetes)</h4>
+        <p>768명의 환자 데이터 · 8개 특성 · 목표: 당뇨 여부(0/1) 예측</p>
+        <div class="info-box">특성: 임신횟수, 혈당, 혈압, 피부두께, 인슐린, BMI, 유전적 기능, 나이</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cell">
+    <div class="cell-gutter">
+      <span class="cell-num">[2]</span>
+      <button class="cell-run-btn" id="run-2" onclick="runCell(2)" title="셀 실행">
+        <svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>
+      </button>
+    </div>
+    <div class="cell-content">
+      <div class="code-cell" id="cell-2">
+        <div class="code-cell-header">
+          <span class="lang-badge">Python</span>
+          <span class="cell-tag">데이터 로드 · 정규화</span>
+        </div>
+        <pre><span class="kw">import</span> <span class="fn">numpy</span> <span class="kw">as</span> np
+<span class="kw">import</span> <span class="fn">pandas</span> <span class="kw">as</span> pd
+<span class="kw">from</span> <span class="fn">sklearn.model_selection</span> <span class="kw">import</span> <span class="fn">train_test_split</span>
+<span class="kw">from</span> <span class="fn">sklearn.preprocessing</span> <span class="kw">import</span> <span class="fn">StandardScaler</span>
+
+<span class="cm"># 데이터 불러오기</span>
+url <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.csv"</span>
+columns <span class="op">=</span> [<span class="st">'임신횟수'</span>, <span class="st">'혈당'</span>, <span class="st">'혈압'</span>, <span class="st">'피부두께'</span>,
+           <span class="st">'인슐린'</span>, <span class="st">'BMI'</span>, <span class="st">'유전기능'</span>, <span class="st">'나이'</span>, <span class="st">'당뇨여부'</span>]
+df <span class="op">=</span> pd.<span class="fn">read_csv</span>(url, names<span class="op">=</span>columns)
+
+X <span class="op">=</span> df.<span class="fn">drop</span>(<span class="st">'당뇨여부'</span>, axis<span class="op">=</span><span class="nm">1</span>).values
+y <span class="op">=</span> df[<span class="st">'당뇨여부'</span>].values
+
+<span class="cm"># 훈련/테스트 분리</span>
+X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(
+    X, y, test_size<span class="op">=</span><span class="nm">0.2</span>, random_state<span class="op">=</span><span class="nm">42</span>)
+
+<span class="cm"># ⭐ 정규화 (StandardScaler: 평균 0, 표준편차 1)</span>
+scaler <span class="op">=</span> <span class="fn">StandardScaler</span>()
+X_train_scaled <span class="op">=</span> scaler.<span class="fn">fit_transform</span>(X_train)
+X_test_scaled  <span class="op">=</span> scaler.<span class="fn">transform</span>(X_test)
+
+<span class="fn">print</span>(<span class="st">f"훈련 데이터: {X_train.shape[0]}명 | 테스트 데이터: {X_test.shape[0]}명"</span>)
+<span class="fn">print</span>(<span class="st">"정규화 완료!"</span>)</pre>
+        <div class="output-cell output-hidden" id="out-2">
+          <div class="output-label">Out [2]:</div>
+          <div class="output-text">훈련 데이터: 614명 | 테스트 데이터: 154명
+정규화 완료!</div>
+          <div style="margin-top:14px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;">⭐ 정규화 전 vs 후 비교</div>
+            <div class="norm-grid">
+              <div>
+                <div class="norm-col-title">정규화 전 (원본)</div>
+                <div class="norm-row before"><span class="norm-label">혈당</span><span>126.0</span></div>
+                <div class="norm-row before"><span class="norm-label">혈압</span><span>72.0</span></div>
+                <div class="norm-row before"><span class="norm-label">BMI</span><span>28.5</span></div>
+                <div class="norm-row before"><span class="norm-label">나이</span><span>45.0</span></div>
+              </div>
+              <div class="norm-arrow">→</div>
+              <div>
+                <div class="norm-col-title">정규화 후 (표준화)</div>
+                <div class="norm-row after"><span class="norm-label">혈당</span><span>+0.32</span></div>
+                <div class="norm-row after"><span class="norm-label">혈압</span><span>+0.14</span></div>
+                <div class="norm-row after"><span class="norm-label">BMI</span><span>-0.41</span></div>
+                <div class="norm-row after"><span class="norm-label">나이</span><span>+1.28</span></div>
+              </div>
+            </div>
+            <div class="md-cell" style="margin-top:10px;background:var(--yellow-l);border:1px solid var(--yellow);">
+              <strong style="color:var(--yellow)">💡 왜 정규화가 필요한가?</strong><br>
+              <span style="font-size:13px;color:var(--text-muted)">혈당(126)과 나이(45)의 단위가 달라서 학습이 불균형해집니다. 모두 같은 스케일로 맞춰야 AI가 공평하게 학습할 수 있어요.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 2 ─── -->
+  <div class="section-header" style="border-left-color:var(--purple);background:var(--purple-ll);">
+    <span class="section-icon">🧠</span>
+    <div class="section-text">
+      <h3>STEP 2 — AI 뇌 설계하기 ⭐</h3>
+      <p>입력층·은닉층·출력층 직접 설계 — 뉴런 수를 바꿔보세요!</p>
+    </div>
+    <span class="section-step" style="background:var(--purple)">STEP 2 ⭐</span>
+  </div>
+
+  <div class="cell">
+    <div class="cell-gutter">
+      <span class="cell-num">[3]</span>
+      <button class="cell-run-btn" id="run-3" onclick="runCell(3)" title="셀 실행">
+        <svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>
+      </button>
+    </div>
+    <div class="cell-content">
+      <!-- Interactive panel -->
+      <div class="interactive-panel">
+        <div class="panel-title">⚙️ 모델 구조 직접 설정하기</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">은닉층 1 뉴런 수</span>
+          <input type="range" class="ctrl-slider" min="4" max="64" value="16" step="4" id="h1" oninput="updateModel()">
+          <span class="ctrl-val" id="h1-val">16</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">은닉층 2 뉴런 수</span>
+          <input type="range" class="ctrl-slider" min="4" max="32" value="8" step="4" id="h2" oninput="updateModel()">
+          <span class="ctrl-val" id="h2-val">8</span>
+        </div>
+        <div style="margin-top:4px;padding:12px 14px;background:var(--code-bg);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--code-text);line-height:1.9;" id="model-code-preview">
+        </div>
+      </div>
+
+      <!-- Model visualization -->
+      <div class="output-cell output-hidden" id="out-3" style="margin-top:6px;">
+        <div class="output-label">Out [3]: 모델 구조</div>
+        <div class="model-viz" id="model-viz">
+          <!-- rendered by JS -->
+        </div>
+        <div class="results-grid" style="grid-template-columns:repeat(3,1fr);margin-top:10px;" id="model-stats">
+        </div>
+        <div class="md-cell" style="margin-top:10px;background:var(--purple-ll);border:1px solid var(--purple);">
+          <strong style="color:var(--purple)">💡 슬라이드 S8과 1:1 대응!</strong><br>
+          <span style="font-size:13px;color:var(--text-muted)">입력층(8개 특성) → 은닉층(패턴 학습) → 출력층(확률 0~1) — 강의 슬라이드의 그림이 그대로 코드가 됩니다.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 3 ─── -->
+  <div class="section-header" style="border-left-color:var(--pink);background:var(--pink-l);">
+    <span class="section-icon">⚙️</span>
+    <div class="section-text">
+      <h3>STEP 3 — 손실함수 · 학습률 설정</h3>
+      <p>슬라이드 S11 (손실함수) · S13 (학습률) 과 코드를 1:1 연결</p>
+    </div>
+    <span class="section-step" style="background:var(--pink)">STEP 3</span>
+  </div>
+
+  <div class="cell">
+    <div class="cell-gutter">
+      <span class="cell-num">[4]</span>
+      <button class="cell-run-btn" id="run-4" onclick="runCell(4)" title="셀 실행">
+        <svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>
+      </button>
+    </div>
+    <div class="cell-content">
+      <div class="code-cell" id="cell-4">
+        <div class="code-cell-header">
+          <span class="lang-badge">Python</span>
+          <span class="cell-tag">손실함수 · 옵티마이저</span>
+        </div>
+        <pre><span class="kw">from</span> <span class="fn">tensorflow</span> <span class="kw">import</span> <span class="fn">keras</span>
+
+model.<span class="fn">compile</span>(
+    optimizer <span class="op">=</span> keras.optimizers.<span class="fn">Adam</span>(
+                    learning_rate<span class="op">=</span><span class="nm">0.01</span>    <span class="cm"># ← 학습률 (S13 슬라이드)</span>
+                ),
+    loss      <span class="op">=</span> <span class="st">'binary_crossentropy'</span>,  <span class="cm"># ← 손실함수 (S11 슬라이드)</span>
+    metrics   <span class="op">=</span> [<span class="st">'accuracy'</span>]            <span class="cm"># 정확도도 같이 측정</span>
+)
+
+<span class="cm"># binary_crossentropy = 이진 분류(당뇨 O/X)용 Cross Entropy</span>
+<span class="fn">print</span>(<span class="st">"모델 컴파일 완료!"</span>)
+<span class="fn">print</span>(<span class="st">f"손실함수: Cross Entropy (분류 문제용)"</span>)
+<span class="fn">print</span>(<span class="st">f"학습률  : 0.01 (적절한 보폭)"</span>)</pre>
+        <div class="output-cell output-hidden" id="out-4">
+          <div class="output-label">Out [4]:</div>
+          <div class="output-text">모델 컴파일 완료!
+손실함수: Cross Entropy (분류 문제용)
+학습률  : 0.01 (적절한 보폭)</div>
+          <div class="md-cell" style="margin-top:10px;background:var(--pink-l);border:1px solid var(--pink);">
+            <strong style="color:var(--pink)">📌 슬라이드 연결</strong><br>
+            <span style="font-size:13px;color:var(--text-muted)">
+              • <strong>binary_crossentropy</strong> → S11 슬라이드의 Cross Entropy 그대로!<br>
+              • <strong>learning_rate=0.01</strong> → S13 슬라이드의 "적절한 학습률" 예시 값
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 4 ─── -->
+  <div class="section-header" style="border-left-color:var(--yellow);background:var(--yellow-l);">
+    <span class="section-icon">▶️</span>
+    <div class="section-text">
+      <h3>STEP 4 — 학습 실행 ⭐</h3>
+      <p>에포크마다 loss 숫자가 줄어드는 걸 직접 확인 — 에포크 수를 바꿔보세요!</p>
+    </div>
+    <span class="section-step" style="background:var(--yellow)">STEP 4 ⭐</span>
+  </div>
+
+  <div class="cell">
+    <div class="cell-gutter">
+      <span class="cell-num">[5]</span>
+      <button class="cell-run-btn" id="run-5" onclick="runCell(5)" title="셀 실행">
+        <svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>
+      </button>
+    </div>
+    <div class="cell-content">
+      <div class="interactive-panel" style="border-color:var(--yellow);">
+        <div class="panel-title" style="color:var(--yellow);">⚙️ 학습 파라미터 설정 (직접 바꿔보세요!)</div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">에포크 수</span>
+          <input type="range" class="ctrl-slider" min="10" max="200" value="100" step="10" id="epochs" oninput="document.getElementById('epochs-val').textContent=this.value">
+          <span class="ctrl-val" id="epochs-val">100</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">배치 크기</span>
+          <input type="range" class="ctrl-slider" min="16" max="128" value="32" step="16" id="batch" oninput="document.getElementById('batch-val').textContent=this.value">
+          <span class="ctrl-val" id="batch-val">32</span>
+        </div>
+        <button class="run-btn" id="train-btn" onclick="startTraining()" style="background:var(--yellow);">▶ 학습 시작!</button>
+      </div>
+
+      <div class="output-cell output-hidden" id="out-5">
+        <div class="output-label">Out [5]: 학습 로그</div>
+        <div class="output-text" id="train-log" style="max-height:200px;overflow-y:auto;background:var(--code-bg);color:var(--code-text);padding:12px;border-radius:6px;font-size:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 5 ─── -->
+  <div class="section-header" style="border-left-color:var(--mint);background:var(--mint-l);">
+    <span class="section-icon">📊</span>
+    <div class="section-text">
+      <h3>STEP 5 — 손실 곡선 시각화 ⭐</h3>
+      <p>loss가 내려가는 그래프 — AI가 배우고 있다!</p>
+    </div>
+    <span class="section-step" style="background:var(--mint)">STEP 5 ⭐</span>
+  </div>
+
+  <div class="cell">
+    <div class="cell-gutter">
+      <span class="cell-num">[6]</span>
+      <button class="cell-run-btn" id="run-6" onclick="runCell(6)" title="셀 실행">
+        <svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>
+      </button>
+    </div>
+    <div class="cell-content">
+      <div class="code-cell" id="cell-6">
+        <div class="code-cell-header">
+          <span class="lang-badge">Python</span>
+          <span class="cell-tag">matplotlib · 손실 곡선</span>
+        </div>
+        <pre><span class="kw">import</span> <span class="fn">matplotlib.pyplot</span> <span class="kw">as</span> <span class="fn">plt</span>
+
+fig, (ax1, ax2) <span class="op">=</span> plt.<span class="fn">subplots</span>(<span class="nm">1</span>, <span class="nm">2</span>, figsize<span class="op">=</span>(<span class="nm">12</span>, <span class="nm">4</span>))
+
+<span class="cm"># 손실 곡선</span>
+ax1.<span class="fn">plot</span>(history.history[<span class="st">'loss'</span>],
+        label<span class="op">=</span><span class="st">'훈련 손실'</span>, color<span class="op">=</span><span class="st">'royalblue'</span>, lw<span class="op">=</span><span class="nm">2</span>)
+ax1.<span class="fn">plot</span>(history.history[<span class="st">'val_loss'</span>],
+        label<span class="op">=</span><span class="st">'검증 손실'</span>, color<span class="op">=</span><span class="st">'tomato'</span>, lw<span class="op">=</span><span class="nm">2</span>, ls<span class="op">=</span><span class="st">'--'</span>)
+ax1.<span class="fn">set_title</span>(<span class="st">'손실 곡선 (Loss Curve)'</span>)
+
+<span class="cm"># 정확도 곡선</span>
+ax2.<span class="fn">plot</span>(history.history[<span class="st">'accuracy'</span>],
+        label<span class="op">=</span><span class="st">'훈련 정확도'</span>, color<span class="op">=</span><span class="st">'royalblue'</span>, lw<span class="op">=</span><span class="nm">2</span>)
+ax2.<span class="fn">plot</span>(history.history[<span class="st">'val_accuracy'</span>],
+        label<span class="op">=</span><span class="st">'검증 정확도'</span>, color<span class="op">=</span><span class="st">'tomato'</span>, lw<span class="op">=</span><span class="nm">2</span>, ls<span class="op">=</span><span class="st">'--'</span>)
+ax2.<span class="fn">set_title</span>(<span class="st">'정확도 곡선 (Accuracy Curve)'</span>)
+
+plt.<span class="fn">tight_layout</span>()
+plt.<span class="fn">show</span>()</pre>
+        <div class="output-cell output-hidden" id="out-6">
+          <div class="output-label">Out [6]: 학습 곡선</div>
+          <div class="chart-wrap">
+            <canvas id="lossChart" height="220"></canvas>
+          </div>
+          <div class="chart-legend">
+            <span><span class="legend-dot" style="background:#2563eb"></span>훈련 손실</span>
+            <span><span class="legend-dot" style="background:#dc2626;opacity:0.7"></span>검증 손실</span>
+          </div>
+          <div style="margin-top:12px">
+            <canvas id="accChart" height="180"></canvas>
+          </div>
+          <div class="chart-legend">
+            <span><span class="legend-dot" style="background:#059669"></span>훈련 정확도</span>
+            <span><span class="legend-dot" style="background:#d97706;opacity:0.7"></span>검증 정확도</span>
+          </div>
+          <div class="results-grid" id="final-metrics" style="margin-top:14px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STEP 6 ─── -->
+  <div class="section-header" style="border-left-color:var(--blue);background:var(--blue-l);">
+    <span class="section-icon">🔬</span>
+    <div class="section-text">
+      <h3>STEP 6 — 학습률 3가지 실험 ⭐</h3>
+      <p>너무 크면 발산 / 너무 작으면 느림 — 직접 비교!</p>
+    </div>
+    <span class="section-step" style="background:var(--blue)">STEP 6 ⭐</span>
+  </div>
+
+  <div class="cell">
+    <div class="cell-gutter">
+      <span class="cell-num">[7]</span>
+      <button class="cell-run-btn" id="run-7" onclick="runCell(7)" title="셀 실행">
+        <svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>
+      </button>
+    </div>
+    <div class="cell-content">
+      <div class="code-cell" id="cell-7">
+        <div class="code-cell-header">
+          <span class="lang-badge">Python</span>
+          <span class="cell-tag">학습률 비교 실험</span>
+        </div>
+        <pre><span class="kw">from</span> <span class="fn">tensorflow.keras.optimizers</span> <span class="kw">import</span> <span class="fn">Adam</span>
+
+results <span class="op">=</span> {}
+<span class="kw">for</span> lr <span class="kw">in</span> [<span class="nm">0.1</span>, <span class="nm">0.01</span>, <span class="nm">0.001</span>]:
+    m <span class="op">=</span> <span class="fn">build_model</span>()
+    m.<span class="fn">compile</span>(optimizer<span class="op">=</span><span class="fn">Adam</span>(learning_rate<span class="op">=</span>lr),
+               loss<span class="op">=</span><span class="st">'binary_crossentropy'</span>)
+    h <span class="op">=</span> m.<span class="fn">fit</span>(X_train, y_train,
+              epochs<span class="op">=</span><span class="nm">50</span>, batch_size<span class="op">=</span><span class="nm">32</span>,
+              validation_split<span class="op">=</span><span class="nm">0.2</span>, verbose<span class="op">=</span><span class="nm">0</span>)
+    results[lr] <span class="op">=</span> h.history[<span class="st">'loss'</span>]
+    <span class="fn">print</span>(<span class="st">f"lr={lr} 완료 | 최종 손실: {h.history['loss'][-1]:.4f}"</span>)</pre>
+        <div class="output-cell output-hidden" id="out-7">
+          <div class="output-label">Out [7]:</div>
+          <div class="output-text" style="margin-bottom:12px;" id="lr-log">lr=0.1   완료 | 최종 손실: 0.6921
+lr=0.01  완료 | 최종 손실: 0.4823
+lr=0.001 완료 | 최종 손실: 0.5812</div>
+          <div class="lr-grid">
+            <div class="lr-card" style="border-color:#ef4444;">
+              <div class="lr-card-header" style="background:#fef2f2;">
+                <span style="color:#dc2626;font-weight:700;">lr = 0.1</span>
+                <span class="status-badge" style="background:#fee2e2;color:#dc2626;">❌ 발산</span>
+              </div>
+              <div class="lr-card-body">
+                손실이 불안정하게 출렁임. 골짜기를 지나쳐서 발산.<br>
+                <strong style="color:#dc2626">학습 실패!</strong>
+              </div>
+            </div>
+            <div class="lr-card" style="border-color:var(--mint);border-width:2px;">
+              <div class="lr-card-header" style="background:var(--mint-l);">
+                <span style="color:var(--mint);font-weight:700;">lr = 0.01</span>
+                <span class="status-badge" style="background:#d1fae5;color:var(--mint);">✅ 최적!</span>
+              </div>
+              <div class="lr-card-body">
+                손실이 안정적으로 내려감. 적절한 보폭으로 수렴.<br>
+                <strong style="color:var(--mint)">학습 성공!</strong>
+              </div>
+            </div>
+            <div class="lr-card" style="border-color:var(--yellow);">
+              <div class="lr-card-header" style="background:var(--yellow-l);">
+                <span style="color:var(--yellow);font-weight:700;">lr = 0.001</span>
+                <span class="status-badge" style="background:#fef3c7;color:var(--yellow);">⚠️ 느림</span>
+              </div>
+              <div class="lr-card-body">
+                내려가긴 하지만 매우 느림. 더 많은 에포크가 필요.<br>
+                <strong style="color:var(--yellow)">너무 느림</strong>
+              </div>
+            </div>
+          </div>
+          <div class="chart-wrap" style="margin-top:14px;">
+            <canvas id="lrChart" height="220"></canvas>
+          </div>
+          <div class="chart-legend">
+            <span><span class="legend-dot" style="background:#ef4444"></span>lr=0.1 (발산)</span>
+            <span><span class="legend-dot" style="background:var(--mint)"></span>lr=0.01 (최적)</span>
+            <span><span class="legend-dot" style="background:var(--yellow)"></span>lr=0.001 (느림)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /nb-body -->
+
+<div class="run-status" id="run-status">⏳ 학습 시뮬레이션 실행 중...</div>
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+let completedCells = 0;
+let trainingHistory = { loss: [], val_loss: [], accuracy: [], val_accuracy: [] };
+let chartInstances = {};
+
+// ── Model code preview ──
+function updateModel() {
+  const h1 = document.getElementById('h1').value;
+  const h2 = document.getElementById('h2').value;
+  document.getElementById('h1-val').textContent = h1;
+  document.getElementById('h2-val').textContent = h2;
+
+  const preview = document.getElementById('model-code-preview');
+  preview.innerHTML = `<span style="color:#a78bfa">model</span> = keras.Sequential([<br>
+&nbsp;&nbsp;keras.layers.<span style="color:#7dd3fc">Dense</span>(<span style="color:#fde68a">${h1}</span>, activation=<span style="color:#86efac">'relu'</span>, input_shape=(<span style="color:#fde68a">8</span>,)),  <span style="color:#94a3b8"># 입력층</span><br>
+&nbsp;&nbsp;keras.layers.<span style="color:#7dd3fc">Dense</span>(<span style="color:#fde68a">${h2}</span>, activation=<span style="color:#86efac">'relu'</span>),                   <span style="color:#94a3b8"># 은닉층</span><br>
+&nbsp;&nbsp;keras.layers.<span style="color:#7dd3fc">Dense</span>(<span style="color:#fde68a">1</span>,  activation=<span style="color:#86efac">'sigmoid'</span>)                 <span style="color:#94a3b8"># 출력층</span><br>
+])`;
+}
+
+function renderModelViz() {
+  const h1 = parseInt(document.getElementById('h1').value);
+  const h2 = parseInt(document.getElementById('h2').value);
+  const viz = document.getElementById('model-viz');
+
+  const makeNodes = (count, cls, max=6) => {
+    let html = '<div class="layer-nodes">';
+    const show = Math.min(count, max);
+    for (let i = 0; i < show; i++) html += `<div class="node ${cls}"></div>`;
+    if (count > max) html += `<div class="node more">+${count-max}</div>`;
+    html += '</div>';
+    return html;
+  };
+
+  viz.innerHTML = `
+    <div class="layer-block">
+      ${makeNodes(8,'input')}
+      <div class="layer-name">입력층</div>
+      <div class="layer-label">Dense(8)</div>
+    </div>
+    <div class="layer-arrow">→</div>
+    <div class="layer-block">
+      ${makeNodes(h1,'hidden')}
+      <div class="layer-name">은닉층 1</div>
+      <div class="layer-label">Dense(${h1})<br>ReLU</div>
+    </div>
+    <div class="layer-arrow">→</div>
+    <div class="layer-block">
+      ${makeNodes(h2,'hidden')}
+      <div class="layer-name">은닉층 2</div>
+      <div class="layer-label">Dense(${h2})<br>ReLU</div>
+    </div>
+    <div class="layer-arrow">→</div>
+    <div class="layer-block">
+      ${makeNodes(1,'output')}
+      <div class="layer-name">출력층</div>
+      <div class="layer-label">Dense(1)<br>Sigmoid</div>
+    </div>`;
+
+  const totalParams = (8*h1 + h1) + (h1*h2 + h2) + (h2*1 + 1);
+  document.getElementById('model-stats').innerHTML = `
+    <div class="result-card"><div class="rc-label">총 파라미터</div><div class="rc-val" style="font-size:18px">${totalParams.toLocaleString()}</div><div class="rc-sub">학습할 가중치 수</div></div>
+    <div class="result-card"><div class="rc-label">은닉층 뉴런</div><div class="rc-val" style="font-size:18px">${h1+h2}</div><div class="rc-sub">${h1} + ${h2}</div></div>
+    <div class="result-card"><div class="rc-label">활성화 함수</div><div class="rc-val" style="font-size:14px;color:var(--mint)">ReLU<br>Sigmoid</div><div class="rc-sub">은닉층 / 출력층</div></div>`;
+}
+
+// ── Generate training data ──
+function generateHistory(epochs, h1, h2) {
+  const lr = 0.01;
+  let loss = 0.72, val = 0.76, acc = 0.56, vacc = 0.54;
+  const history = { loss: [], val_loss: [], accuracy: [], val_accuracy: [] };
+  const complexity = (h1 + h2) / 24;
+
+  for (let i = 0; i < epochs; i++) {
+    const decay = Math.exp(-i * 0.035 * (1 + complexity * 0.3));
+    const noise = (Math.random() - 0.5) * 0.018;
+    loss = Math.max(0.28, 0.72 * decay + noise);
+    val  = Math.max(0.32, loss + 0.04 + Math.random() * 0.025);
+    acc  = Math.min(0.92, 0.56 + (1 - decay) * 0.37 - noise);
+    vacc = Math.max(0.58, acc - 0.04 - Math.random() * 0.02);
+    history.loss.push(parseFloat(loss.toFixed(4)));
+    history.val_loss.push(parseFloat(val.toFixed(4)));
+    history.accuracy.push(parseFloat(acc.toFixed(4)));
+    history.val_accuracy.push(parseFloat(vacc.toFixed(4)));
+  }
+  return history;
+}
+
+// ── Training simulation ──
+function startTraining() {
+  const epochs = parseInt(document.getElementById('epochs').value);
+  const h1 = parseInt(document.getElementById('h1').value);
+  const h2 = parseInt(document.getElementById('h2').value);
+  const btn = document.getElementById('train-btn');
+  const logEl = document.getElementById('train-log');
+  const out5 = document.getElementById('out-5');
+
+  btn.disabled = true;
+  btn.textContent = '⏳ 학습 중...';
+  out5.classList.remove('output-hidden');
+  logEl.innerHTML = '';
+
+  const hist = generateHistory(epochs, h1, h2);
+  trainingHistory = hist;
+
+  const showEvery = Math.max(1, Math.floor(epochs / 12));
+  let rendered = 0;
+
+  function renderNext() {
+    if (rendered >= epochs) {
+      btn.disabled = false;
+      btn.textContent = '▶ 다시 학습!';
+      document.getElementById('run-5').classList.add('done');
+
+      // Auto-render charts in step 5 & 6
+      showOutputCell('out-6', true);
+      renderLossChart();
+      renderAccChart();
+      renderFinalMetrics();
+      document.getElementById('run-6').classList.add('done');
+
+      showOutputCell('out-7', true);
+      renderLRChart();
+      document.getElementById('run-7').classList.add('done');
+
+      markComplete(5);
+      markComplete(6);
+      markComplete(7);
+      return;
+    }
+
+    if (rendered % showEvery === 0 || rendered === epochs - 1) {
+      const ep = rendered + 1;
+      const loss = hist.loss[rendered];
+      const vacc = hist.val_accuracy[rendered];
+      const isGood = loss < 0.45;
+      const line = `<span class="${isGood ? 'epoch-good' : 'epoch-line'}">Epoch ${String(ep).padStart(3,' ')}/${epochs}  —  loss: ${loss.toFixed(4)}  val_accuracy: ${(vacc*100).toFixed(1)}%</span>\n`;
+      logEl.innerHTML += line;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+    rendered++;
+    setTimeout(renderNext, 18);
+  }
+  renderNext();
+}
+
+// ── Charts ──
+function renderLossChart() {
+  if (chartInstances.loss) chartInstances.loss.destroy();
+  const hist = trainingHistory;
+  const epochs = hist.loss.length;
+  const labels = Array.from({length: epochs}, (_, i) => i + 1);
+
+  chartInstances.loss = new Chart(document.getElementById('lossChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: '훈련 손실', data: hist.loss, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.08)', borderWidth: 2.5, pointRadius: 0, tension: 0.4 },
+        { label: '검증 손실', data: hist.val_loss, borderColor: '#dc2626', backgroundColor: 'rgba(220,38,38,0.06)', borderWidth: 2, borderDash: [5,4], pointRadius: 0, tension: 0.4 },
+      ]
+    },
+    options: {
+      responsive: true, animation: { duration: 600 },
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { title: { display: true, text: '에포크 (Epoch)', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        y: { title: { display: true, text: '손실 (Loss)', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } }
+      }
+    }
+  });
+}
+
+function renderAccChart() {
+  if (chartInstances.acc) chartInstances.acc.destroy();
+  const hist = trainingHistory;
+  const labels = Array.from({length: hist.accuracy.length}, (_, i) => i + 1);
+
+  chartInstances.acc = new Chart(document.getElementById('accChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: '훈련 정확도', data: hist.accuracy.map(v => parseFloat((v*100).toFixed(2))), borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.08)', borderWidth: 2.5, pointRadius: 0, tension: 0.4 },
+        { label: '검증 정확도', data: hist.val_accuracy.map(v => parseFloat((v*100).toFixed(2))), borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.06)', borderWidth: 2, borderDash: [5,4], pointRadius: 0, tension: 0.4 },
+      ]
+    },
+    options: {
+      responsive: true, animation: { duration: 600 },
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { title: { display: true, text: '에포크 (Epoch)', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        y: { min: 50, max: 100, title: { display: true, text: '정확도 (%)', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } }
+      }
+    }
+  });
+}
+
+function renderFinalMetrics() {
+  const hist = trainingHistory;
+  const n = hist.loss.length - 1;
+  const fl = hist.loss[n].toFixed(4);
+  const fa = (hist.accuracy[n] * 100).toFixed(1);
+  const fva = (hist.val_accuracy[n] * 100).toFixed(1);
+  document.getElementById('final-metrics').innerHTML = `
+    <div class="result-card"><div class="rc-label">최종 훈련 손실</div><div class="rc-val">${fl}</div><div class="rc-sub">↓ 내려갈수록 좋음</div></div>
+    <div class="result-card"><div class="rc-label">훈련 정확도</div><div class="rc-val" style="color:var(--mint)">${fa}%</div><div class="rc-sub">훈련 데이터 기준</div></div>
+    <div class="result-card"><div class="rc-label">검증 정확도</div><div class="rc-val" style="color:var(--blue)">${fva}%</div><div class="rc-sub">새 데이터 기준</div></div>`;
+}
+
+function renderLRChart() {
+  if (chartInstances.lr) chartInstances.lr.destroy();
+  const epochs = 50;
+  const labels = Array.from({length: epochs}, (_, i) => i + 1);
+
+  // Simulate 3 learning rate curves
+  function genLR(lr) {
+    let loss = 0.72;
+    const out = [];
+    for (let i = 0; i < epochs; i++) {
+      if (lr === 0.1) {
+        // Diverging with noise
+        loss = 0.68 + Math.sin(i * 0.4) * 0.12 + (i > 10 ? (i - 10) * 0.008 : 0) + (Math.random() - 0.5) * 0.08;
+        loss = Math.max(0.5, loss);
+      } else if (lr === 0.01) {
+        loss = Math.max(0.30, 0.72 * Math.exp(-i * 0.045) + (Math.random() - 0.5) * 0.012);
+      } else {
+        loss = Math.max(0.48, 0.72 * Math.exp(-i * 0.018) + (Math.random() - 0.5) * 0.006);
+      }
+      out.push(parseFloat(loss.toFixed(4)));
+    }
+    return out;
+  }
+
+  chartInstances.lr = new Chart(document.getElementById('lrChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'lr=0.1 (발산)', data: genLR(0.1), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.05)', borderWidth: 2.5, pointRadius: 0, tension: 0.3 },
+        { label: 'lr=0.01 (최적)', data: genLR(0.01), borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.08)', borderWidth: 2.5, pointRadius: 0, tension: 0.4 },
+        { label: 'lr=0.001 (느림)', data: genLR(0.001), borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.05)', borderWidth: 2, borderDash: [4,3], pointRadius: 0, tension: 0.4 },
+      ]
+    },
+    options: {
+      responsive: true, animation: { duration: 800 },
+      plugins: { legend: { display: true, position: 'top', labels: { font: { size: 11 }, usePointStyle: true, pointStyleWidth: 14 } }, tooltip: { mode: 'index', intersect: false } },
+      scales: {
+        x: { title: { display: true, text: '에포크 (Epoch)', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+        y: { title: { display: true, text: '손실 (Loss)', font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.06)' } }
+      }
+    }
+  });
+}
+
+// ── Cell runner ──
+function showOutputCell(id, show) {
+  const el = document.getElementById(id);
+  if (show) el.classList.remove('output-hidden');
+  else el.classList.add('output-hidden');
+}
+
+function markComplete(step) {
+  completedCells = Math.max(completedCells, step);
+  document.getElementById('progress-label').textContent = `${completedCells} / 6 완료`;
+  document.getElementById('progress-bar').style.width = (completedCells / 6 * 100) + '%';
+}
+
+async function runCell(n) {
+  const btn = document.getElementById(`run-${n}`);
+  btn.classList.add('running');
+
+  await new Promise(r => setTimeout(r, n === 5 ? 100 : 600 + Math.random() * 400));
+
+  if (n === 2) { showOutputCell('out-2', true); markComplete(1); }
+  if (n === 3) {
+    showOutputCell('out-3', true);
+    renderModelViz();
+    markComplete(2);
+    document.getElementById('cell-2').classList.add('active');
+  }
+  if (n === 4) { showOutputCell('out-4', true); markComplete(3); }
+  if (n === 5) { startTraining(); markComplete(4); }
+  if (n === 6) {
+    if (trainingHistory.loss.length === 0) {
+      alert('먼저 STEP 4 (셀 [5])를 실행해서 학습을 완료해주세요!');
+      btn.classList.remove('running');
+      return;
+    }
+    showOutputCell('out-6', true);
+    renderLossChart(); renderAccChart(); renderFinalMetrics();
+    markComplete(5);
+  }
+  if (n === 7) {
+    showOutputCell('out-7', true);
+    renderLRChart();
+    markComplete(6);
+  }
+
+  btn.classList.remove('running');
+  btn.classList.add('done');
+}
+
+async function runAll() {
+  for (const n of [2, 3, 4]) {
+    await runCell(n);
+    await new Promise(r => setTimeout(r, 400));
+  }
+  // Step 5 runs async
+  await runCell(5);
+  await new Promise(r => setTimeout(r, 2500));
+  await runCell(7);
+}
+
+function resetAll() {
+  [2,3,4,5,6,7].forEach(n => {
+    const btn = document.getElementById(`run-${n}`);
+    if (btn) { btn.classList.remove('running','done'); }
+    const out = document.getElementById(`out-${n}`);
+    if (out) out.classList.add('output-hidden');
+  });
+  document.getElementById('cell-2')?.classList.remove('active');
+  document.getElementById('train-log').innerHTML = '';
+  document.getElementById('train-btn').disabled = false;
+  document.getElementById('train-btn').textContent = '▶ 학습 시작!';
+  trainingHistory = { loss: [], val_loss: [], accuracy: [], val_accuracy: [] };
+  Object.values(chartInstances).forEach(c => c?.destroy());
+  chartInstances = {};
+  completedCells = 0;
+  document.getElementById('progress-label').textContent = '0 / 6 완료';
+  document.getElementById('progress-bar').style.width = '0%';
+}
+
+// Initialize
+updateModel();
+</script>
+</body>
+</html>
